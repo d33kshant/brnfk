@@ -4,6 +4,7 @@ class BrainFuck {
     loopPointer: number
     memory: number[]
     loopStack: number[]
+    looping: boolean
 
     constructor(source: string, size: number = 5) {
         this.source = source
@@ -11,6 +12,7 @@ class BrainFuck {
         this.loopPointer = 0
         this.memory = Array(size).fill(0)
         this.loopStack = []
+        this.looping = false
     }
 
     left() {
@@ -62,35 +64,44 @@ class BrainFuck {
 
     run() {
         // Iterate over every character in the source
-        for (const ch of this.source) {
+        for (let i = 0; i < this.source.length; i++) {
+            const ch = this.source.charAt(i)
             if (' \n\t'.includes(ch)) continue
+
+            // If looping chech for brackets
+            if (this.looping) {
+                // If found nested loop increment loopPointer
+                if (ch === '[') this.loopPointer++
+                // If found closing brackets
+                if (ch === ']') {
+                    // if loopPointer is 0 close looping state
+                    if (this.loopPointer === 0) this.looping = false
+                    // If in nested loop decriment loopPointer
+                    else this.loopPointer--
+                }
+                // If looping continue any ways
+                continue
+            }
+
+            // prettier-ignore
+            // Perform action based on current chatacter
             switch (ch) {
-                case '>':
-                    this.right()
-                    break
-                case '<':
-                    this.left()
-                    break
-                case '+':
-                    this.increment()
-                    break
-                case '-':
-                    this.decrement()
-                    break
-                case '.':
-                    this.print()
-                    break
-                case ',':
-                    this.read()
-                    break
-                default:
-                    throw new Error(`Unknown character: ${ch}`)
+                case '>': this.right(); break
+                case '<': this.left(); break
+                case '+': this.increment(); break
+                case '-': this.decrement(); break
+                case '.': this.print(); break
+                case ',': this.read(); break
+                case '[': this.memory[this.pointer] === 0 ? this.looping = true : this.loopStack.push(i) ; break
+                case ']': this.memory[this.pointer] !== 0 ? i = this.loopStack[this.loopStack.length-1] : this.loopStack.pop(); break
+                default: throw new Error(`Unknown character: ${ch}`)
             }
         }
-        console.log('\nFinished')
+        // console.log('\nFinished')
     }
 }
 
-const b = new BrainFuck('>++\n,<++\t')
+const b = new BrainFuck(
+    '++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.'
+)
 b.run()
-console.log(b.memory)
